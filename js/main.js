@@ -209,63 +209,62 @@
    /*---------------------------------------------------- */
 	/*  Placeholder Plugin Settings
 	------------------------------------------------------ */ 
-	$('input, textarea, select').placeholder()  
+	$('input, textarea, select').placeholder()
 
 
-  	/*---------------------------------------------------- */
-	/*	contact form
-	------------------------------------------------------ */
-
-	/* local validation */
+	/*---------------------------------------------------- */
+	/*	Contact Form Submission (AJAX) with Debug Logs
+    ------------------------------------------------------ */
 	$('#contactForm').validate({
 
-		/* submit via ajax */
+		// Validate and submit form using AJAX
 		submitHandler: function(form) {
 
 			var sLoader = $('#submit-loader');
+			console.log("Form submission started.");
 
-			$.ajax({      	
+			// AJAX request to send form data to PHP script
+			$.ajax({
+				type: "POST",
+				url: "inc/sendEmail.php",  // Ensure this points to the correct PHP file
+				data: $(form).serialize(),  // Serialize form data to send to PHP
+				beforeSend: function() {
+					console.log("Sending request to server...");
+					sLoader.fadeIn();  // Show loading spinner while sending the request
+				},
+				success: function(msg) {
+					console.log("Response from server: " + msg);
 
-		      type: "POST",
-		      url: "inc/sendEmail.php",
-		      data: $(form).serialize(),
-		      beforeSend: function() { 
+					// Check if the server response is 'OK' or an error message
+					if (msg == 'OK') {
+						console.log("Form submitted successfully.");
+						sLoader.fadeOut();
+						$('#message-warning').hide();  // Hide any previous error messages
+						$('#contactForm').fadeOut();  // Hide the contact form after successful submission
+						$('#message-success').fadeIn();  // Show success message
+					} else {
+						// If there was an error, show the error message
+						console.log("Error from server: " + msg);
+						sLoader.fadeOut();
+						$('#message-warning').html(msg);  // Display the error message returned by PHP
+						$('#message-warning').fadeIn();
+					}
 
-		      	sLoader.fadeIn(); 
-
-		      },
-		      success: function(msg) {
-
-	            // Message was sent
-	            if (msg == 'OK') {
-	            	sLoader.fadeOut(); 
-	               $('#message-warning').hide();
-	               $('#contactForm').fadeOut();
-	               $('#message-success').fadeIn();   
-	            }
-	            // There was an error
-	            else {
-	            	sLoader.fadeOut(); 
-	               $('#message-warning').html(msg);
-		            $('#message-warning').fadeIn();
-	            }
-
-		      },
-		      error: function() {
-
-		      	sLoader.fadeOut(); 
-		      	$('#message-warning').html("Something went wrong. Please try again.");
-		         $('#message-warning').fadeIn();
-
-		      }
-
-	      });     		
-  		}
-
+				},
+				error: function(xhr, status, error) {
+					// In case of AJAX error (like network issues), display an error message
+					console.log("AJAX request failed with status: " + status + ", error: " + error);
+					sLoader.fadeOut();
+					$('#message-warning').html("Something went wrong. Please try again.");
+					$('#message-warning').fadeIn();
+				}
+			});
+		}
 	});
 
 
- 	/*----------------------------------------------------- */
+
+	/*----------------------------------------------------- */
   	/* Back to top
    ------------------------------------------------------- */ 
 	var pxShow = 300; // height on which the button will show
